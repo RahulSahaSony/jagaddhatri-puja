@@ -1013,12 +1013,6 @@ window.addEventListener('resize', fitCanvas);
 window.addEventListener('orientationchange', () => setTimeout(fitCanvas, 250));
 if (window.ResizeObserver) new ResizeObserver(() => fitCanvas()).observe(el.cv);
 
-/* ===================== init ===================== */
-el.zoom.max = String(CONFIG.ZOOM_MAX);
-if (CONFIG.IS_PLACEHOLDER) {
-  showBanner('সাইট পরিচালকের জন্য: এখন সাময়িক প্লেসহোল্ডার ফ্রেম ব্যবহার হচ্ছে। অফিসিয়াল ফ্রেম পাওয়ার পর README.md-এর “ফ্রেম বদলানো” অংশ দেখে এটি বদলে নিন।');
-}
-loadFrame(CONFIG.FRAME_SRC || CONFIG.EMBEDDED_FRAME);
 
 /* স্বয়ংক্রিয় পরীক্ষার (টেস্ট) জন্য — ব্যবহারকারীর কোনো কাজে লাগে না */
 window.__pujaTest = {
