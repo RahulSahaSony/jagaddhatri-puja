@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7f2" />
+  <meta name="description" content="মজুমদারখীল জগদ্ধাত্রী পূজা — আপনার ছবি দিয়ে উৎসবের প্রোফাইল ফ্রেম তৈরি করুন।" />
+  <title>জগদ্ধাত্রী পূজা | প্রোফাইল ফ্রেম</title>
+  <style>
+    :root {
+      --pink: #eb226a;
+      --orange: #ff8c19;
+      --purple: #7a238d;
+      --ink: #4c234a;
+      --muted: #825f7d;
+      --line: #f1d9e7;
+      --cream: #fff8f3;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      font-family: "Noto Sans Bengali", "Hind Siliguri", "Vrinda", "Bangla Sangam MN", system-ui, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(ellipse 95% 350px at 50% 0, #ffe8ec 0, transparent 100%),
+                  linear-gradient(180deg, #fffaf6 0%, #fff5f5 100%);
+      min-height: 100dvh;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+    .shell { width: min(100% - 28px, 510px); margin: 0 auto; padding: 24px 0 24px; }
+    .topline { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+    .lotus { width: 15px; height: 15px; border-radius: 65% 5% 65% 5%; background: linear-gradient(135deg, var(--orange), var(--pink)); transform: rotate(45deg); flex: none; }
+    .eyebrow { color: var(--purple); font-size: 13px; font-weight: 750; letter-spacing: .02em; }
+    h1 { font-size: clamp(21px, 5vw, 27px); font-weight: 850; text-align: center; margin: 14px 0 4px; line-height: 1.5; }
+    .sub { color: var(--muted); text-align: center; margin: 0 0 19px; font-size: 13px; }
+    .editor {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 14px 42px rgba(147, 53, 97, 0.09);
+      padding: 12px;
+    }
+    .preview {
+      position: relative; overflow: hidden; border-radius: 17px;
+      background: linear-gradient(145deg, #fff5e9, #ffe7f2);
+      width: 100%; aspect-ratio: 1 / 1;
+      isolation: isolate;
+    }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+    .preview.has-photo canvas { cursor: grab; }
+    .preview.has-photo canvas:active { cursor: grabbing; }
+    .empty-hint {
+      position: absolute; left: 50%; top: 44%; transform: translate(-50%,-50%);
+      color: #8f517b; padding: 9px 17px; background: #fffdfbe3;
+      border: 1px solid #f3d8df; border-radius: 999px;
+      font-weight: 650; font-size: 13px; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 5px 20px #6a1b6b0e;
+    }
+    .preview.has-photo .empty-hint { display: none; }
+    .tools { padding: 14px 3px 2px; }
+    .button {
+      border: 0; border-radius: 14px; min-height: 48px; padding: 12px 15px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      text-align: center; font-size: 15px; font-weight: 750; line-height: 1.2;
+      transition: filter .15s, transform .15s;
+    }
+    .button:active { transform: scale(.985); }
+    .button:hover { filter: brightness(.97); }
+    .primary { color: #fff; background: linear-gradient(105deg, var(--pink) 0%, #ee4369 40%, var(--orange) 100%); box-shadow: 0 5px 15px #eb226a28; }
+    .secondary { background: #fff; color: var(--purple); border: 1px solid #d8b9d8; }
+    .soft { color: var(--purple); background: #fbf0f8; }
+    .full { width: 100%; }
+    .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; }
+    .zoomline { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+    .zoomlabel { color: var(--muted); font-size: 13px; font-weight: 650; white-space: nowrap; }
+    input[type=range] { flex: 1; width: 100%; min-width: 0; accent-color: var(--pink); height: 28px; cursor: pointer; }
+    .muted-line { text-align: center; color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+    .actions { display: grid; gap: 9px; }
+    .extra { display: flex; justify-content: center; margin-top: 8px; }
+    .linkbutton { background: none; border: 0; color: #885c81; padding: 8px 13px; text-decoration: underline; font-size: 12px; }
+    .foot { text-align: center; color: #93738b; font-size: 11px; padding: 17px 0 0; line-height: 1.7; }
+    .status { min-height: 20px; text-align: center; font-size: 12px; color: var(--purple); margin-top: 8px; }
+    [hidden] { display: none !important; }
+    @media (min-width: 650px) { .shell { padding-top: 36px; } .editor { padding: 15px; } }
+    @media (max-width: 360px) { .shell { width: min(100% - 18px,510px); } .editor { padding: 9px; } .button { padding-inline: 9px; font-size: 13px; } }
+    @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topline"><span class="lotus" aria-hidden="true"></span><span class="eyebrow">মজুমদারখীল জগদ্ধাত্রী পূজা · ২০২৬</span></div>
+    <h1>উৎসবের ফ্রেমে আপনার ছবি</h1>
+    <p class="sub">ছবি দিন, সাজান, ডাউনলোড করুন</p>
+
+    <section class="editor" aria-label="প্রোফাইল ছবি তৈরি করুন">
+      <div class="preview" id="preview">
+        <canvas id="canvas" width="1024" height="1024" aria-label="আপনার প্রোফাইল ফ্রেমের প্রিভিউ"></canvas>
+        <div class="empty-hint" id="emptyHint">এখানে আপনার ছবি</div>
+      </div>
+      <div class="tools">
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden />
+        <div id="beforeUpload">
+          <button class="button primary full" id="uploadBtn" type="button">＋ ছবি বেছে নিন</button>
+        </div>
+        <div id="afterUpload" hidden>
+          <div class="zoomline">
+            <label class="zoomlabel" for="zoom">ছবি বড়-ছোট</label>
+            <input type="range" min="1" max="3.5" step="0.01" value="1" id="zoom" />
+          </div>
+          <div class="actions">
+            <button class="button primary full" id="downloadBtn" type="button">ছবি ডাউনলোড করুন</button>
+            <div class="row">
+              <button class="button secondary" id="changeBtn" type="button">ছবি বদলান</button>
+              <button class="button soft" id="shareBtn" type="button">শেয়ার করুন</button>
+            </div>
+          </div>
+          <div class="extra"><button class="linkbutton" id="resetBtn" type="button">ছবির অবস্থান ঠিক করুন</button></div>
+          <p class="muted-line">আঙুল দিয়ে ছবি সরান বা বড় করুন</p>
+        </div>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+    <footer class="foot">৪০ বছরের ঐতিহ্য · জয় মা জগদ্ধাত্রী<br>আপনার ছবি কোথাও আপলোড বা সংরক্ষণ করা হয় না।</footer>
+  </main>
+<script>
+(() => {
+  'use strict';
+  const SIZE = 2048;
+  const CENTER = { x: 1024, y: 1010 };
+  const RADIUS = 855;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const frame = new Image();
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+  const beforeUpload = document.getElementById('beforeUpload');
+  const afterUpload = document.getElementById('afterUpload');
+  const zoomInput = document.getElementById('zoom');
+  const status = document.getElementById('status');
+
+  let photo = null;
+  let photoURL = null;
+  let zoom = 1, offsetX = 0, offsetY = 0;
+  let frameLoaded = false;
+  const pointers = new Map();
+  let pinch = null;
+
+  const message = (s) => { status.textContent = s; };
+  const limit = (v, min, max) => Math.max(min, Math.min(max, v));
+  const baseScale = () => photo ? Math.max(2 * RADIUS / photo.naturalWidth, 2 * RADIUS / photo.naturalHeight) : 1;
+
+  function constrain() {
+    if (!photo) return;
+    const s = baseScale() * zoom;
+    const excessX = Math.max(0, (photo.naturalWidth * s - RADIUS * 2) / 2);
+    const excessY = Math.max(0, (photo.naturalHeight * s - RADIUS * 2) / 2);
+    offsetX = limit(offsetX, -excessX, excessX);
+    offsetY = limit(offsetY, -excessY, excessY);
+  }
+
+  function render(target) {
+    const c = target.getContext('2d');
+    const factor = target.width / SIZE;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, target.width, target.height);
+    c.setTransform(factor, 0, 0, factor, 0, 0);
+    c.fillStyle = '#fffaf6';
+    c.fillRect(0, 0, SIZE, SIZE);
+    if (photo) {
+      const s = baseScale() * zoom;
+      const w = photo.naturalWidth * s, h = photo.naturalHeight * s;
+      c.save();
+      c.beginPath();
+      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
+      c.clip();
+      c.drawImage(photo, CENTER.x + offsetX - w / 2, CENTER.y + offsetY - h / 2, w, h);
+      c.restore();
+    } else {
+      c.save();
+      c.beginPath();
+      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
+      c.clip();
+      const g = c.createLinearGradient(300, 180, 1700, 1750);
+      g.addColorStop(0, '#fff7f2'); g.addColorStop(1, '#fce0eb');
+      c.fillStyle = g; c.fillRect(0, 0, SIZE, SIZE);
+      c.restore();
+    }
+    if (frameLoaded) c.drawImage(frame, 0, 0, SIZE, SIZE);
+    c.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  const redraw = () => render(canvas);
+
+  frame.onload = () => { frameLoaded = true; redraw(); };
+  frame.onerror = () => message('ফ্রেম লোড হয়নি। frame.png ফাইলটি আছে কি না দেখুন।');
+  frame.src = './frame.png';
+  redraw();
+
+  document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+  document.getElementById('changeBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { message('অনুগ্রহ করে একটি ছবি বেছে নিন।'); return; }
+    if (file.size > 15 * 1024 * 1024) { message('১৫ MB-এর ছোট ছবি ব্যবহার করুন।'); return; }
+    const url = URL.createObjectURL(file);
+    const next = new Image();
+    next.onload = () => {
+      if (photoURL) URL.revokeObjectURL(photoURL);
+      photoURL = url;
+      photo = next; zoom = 1; offsetX = 0; offsetY = 0;
+      zoomInput.value = '1';
+      pointers.clear(); pinch = null;
+      beforeUpload.hidden = true;
+      afterUpload.hidden = false;
+      preview.classList.add('has-photo');
+      message(''); redraw();
+      fileInput.value = '';
+    };
+    next.onerror = () => {
+      URL.revokeObjectURL(url);
+      message('ছবিটি খোলা যায়নি। JPG বা PNG ছবি ব্যবহার করুন।');
+      fileInput.value = '';
+    };
+    next.src = url;
+  });
+
+  zoomInput.addEventListener('input', () => {
+    zoom = Number(zoomInput.value);
+    constrain(); redraw();
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    zoom = 1; offsetX = 0; offsetY = 0; zoomInput.value = '1';
+    message(''); redraw();
+  });
+
+  const toCoords = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    return { x: (event.clientX - rect.left) * SIZE / rect.width,
+             y: (event.clientY - rect.top) * SIZE / rect.height };
+  };
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  canvas.addEventListener('pointerdown', (event) => {
+    if (!photo) return;
+    event.preventDefault();
+    canvas.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, toCoords(event));
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = { distance: Math.max(distance(a, b), 1), mid: midpoint(a, b), zoom, offsetX, offsetY };
+    }
+  });
+  canvas.addEventListener('pointermove', (event) => {
+    if (!photo || !pointers.has(event.pointerId)) return;
+    event.preventDefault();
+    const prev = pointers.get(event.pointerId);
+    const current = toCoords(event);
+    pointers.set(event.pointerId, current);
+    if (pointers.size === 1) {
+      offsetX += current.x - prev.x;
+      offsetY += current.y - prev.y;
+    } else if (pointers.size === 2 && pinch) {
+      const [a, b] = [...pointers.values()];
+      zoom = limit(pinch.zoom * distance(a, b) / pinch.distance, 1, 3.5);
+      const mid = midpoint(a, b);
+      offsetX = pinch.offsetX + mid.x - pinch.mid.x;
+      offsetY = pinch.offsetY + mid.y - pinch.mid.y;
+      zoomInput.value = String(zoom);
+    }
+    constrain(); redraw();
+  });
+  const pointerEnd = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size < 2) pinch = null;
+  };
+  canvas.addEventListener('pointerup', pointerEnd);
+  canvas.addEventListener('pointercancel', pointerEnd);
+  canvas.addEventListener('lostpointercapture', pointerEnd);
+
+  async function makeFile() {
+    if (!photo || !frameLoaded) { message('আগে ছবি যুক্ত করুন।'); return null; }
+    const output = document.createElement('canvas');
+    output.width = SIZE; output.height = SIZE;
+    render(output);
+    const blob = await new Promise(resolve => output.toBlob(resolve, 'image/png'));
+    if (!blob) { message('ছবি তৈরি করা যায়নি। আবার চেষ্টা করুন।'); return null; }
+    return new File([blob], 'Jagaddhatri-Puja-2026.png', { type: 'image/png' });
+  }
+  function save(file) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url; a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
+    message('ছবি তৈরি হচ্ছে…');
+    const file = await makeFile();
+    if (file) { save(file); message('ছবি ডাউনলোড হয়েছে। এবার ফেসবুকে ব্যবহার করুন।'); }
+  });
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const file = await makeFile();
+    if (!file) return;
+    try {
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({ files: [file], title: 'জগদ্ধাত্রী পূজা ২০২৬' });
+        message('');
+      } else {
+        save(file);
+        message('ছবি ডাউনলোড হয়েছে। ফেসবুকে আপলোড করুন।');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') message('শেয়ার করা যায়নি। ডাউনলোড করে ফেসবুকে দিন।');
+    }
+  });
+  window.addEventListener('pagehide', () => { if (photoURL) URL.revokeObjectURL(photoURL); });
+})();
+</script>
+</body>
+</html>
