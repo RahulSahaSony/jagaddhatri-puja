@@ -9,7 +9,7 @@
   <style>
     :root {
       --pink: #eb226a;
-      --orange: #302821;
+      --orange: #ff8c19;
       --purple: #7a238d;
       --ink: #4c234a;
       --muted: #825f7d;
@@ -150,8 +150,8 @@
   'use strict';
   const SIZE = 2048;
   const CENTER = { x: 1024, y: 1010 };
-  // Keep the entire picture square, with the official frame on top.
-  const PHOTO_SIZE = SIZE;
+  // Preserve the original circular photo area and cream background.
+  const RADIUS = 855;
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   const frame = new Image();
@@ -171,13 +171,13 @@
 
   const message = (s) => { status.textContent = s; };
   const limit = (v, min, max) => Math.max(min, Math.min(max, v));
-  const baseScale = () => photo ? Math.max(PHOTO_SIZE / photo.naturalWidth, PHOTO_SIZE / photo.naturalHeight) : 1;
+  const baseScale = () => photo ? Math.max(2 * RADIUS / photo.naturalWidth, 2 * RADIUS / photo.naturalHeight) : 1;
 
   function constrain() {
     if (!photo) return;
     const s = baseScale() * zoom;
-    const excessX = Math.max(0, (photo.naturalWidth * s - PHOTO_SIZE) / 2);
-    const excessY = Math.max(0, (photo.naturalHeight * s - PHOTO_SIZE) / 2);
+    const excessX = Math.max(0, (photo.naturalWidth * s - RADIUS * 2) / 2);
+    const excessY = Math.max(0, (photo.naturalHeight * s - RADIUS * 2) / 2);
     offsetX = limit(offsetX, -excessX, excessX);
     offsetY = limit(offsetY, -excessY, excessY);
   }
@@ -193,11 +193,21 @@
     if (photo) {
       const s = baseScale() * zoom;
       const w = photo.naturalWidth * s, h = photo.naturalHeight * s;
+      c.save();
+      c.beginPath();
+      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
+      c.clip();
       c.drawImage(photo, CENTER.x + offsetX - w / 2, CENTER.y + offsetY - h / 2, w, h);
+      c.restore();
     } else {
+      c.save();
+      c.beginPath();
+      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
+      c.clip();
       const g = c.createLinearGradient(300, 180, 1700, 1750);
       g.addColorStop(0, '#fff7f2'); g.addColorStop(1, '#fce0eb');
       c.fillStyle = g; c.fillRect(0, 0, SIZE, SIZE);
+      c.restore();
     }
     if (frameLoaded) c.drawImage(frame, 0, 0, SIZE, SIZE);
     c.setTransform(1, 0, 0, 1, 0, 0);
