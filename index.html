@@ -9,7 +9,7 @@
   <style>
     :root {
       --pink: #eb226a;
-      --orange: #ff8c19;
+      --orange: #302821;
       --purple: #7a238d;
       --ink: #4c234a;
       --muted: #825f7d;
@@ -81,6 +81,14 @@
     .actions { display: grid; gap: 9px; }
     .extra { display: flex; justify-content: center; margin-top: 8px; }
     .linkbutton { background: none; border: 0; color: #885c81; padding: 8px 13px; text-decoration: underline; font-size: 12px; }
+    .save-help { margin: 9px 0 0; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .save-help button { color: var(--purple); text-decoration: underline; background: transparent; border: 0; padding: 4px 6px; font-weight: 700; }
+    .overlay { position: fixed; inset: 0; z-index: 10; padding: 15px; background: #35132dbd; display: flex; align-items: center; justify-content: center; }
+    .save-panel { background: white; width: min(100%, 510px); max-height: 95dvh; overflow-y: auto; padding: 14px; border-radius: 18px; box-shadow: 0 12px 60px #25082044; }
+    .save-panel img { width: 100%; max-height: 65dvh; object-fit: contain; border-radius: 10px; display: block; }
+    .save-panel h2 { font-size: 17px; margin: 0 0 8px; text-align: center; }
+    .save-panel p { font-size: 13px; line-height: 1.5; margin: 9px 0; text-align: center; color: var(--muted); }
+    .save-panel .row { margin-top: 10px; }
     .foot { text-align: center; color: #93738b; font-size: 11px; padding: 17px 0 0; line-height: 1.7; }
     .status { min-height: 20px; text-align: center; font-size: 12px; color: var(--purple); margin-top: 8px; }
     [hidden] { display: none !important; }
@@ -119,10 +127,22 @@
           </div>
           <div class="extra"><button class="linkbutton" id="resetBtn" type="button">ছবির অবস্থান ঠিক করুন</button></div>
           <p class="muted-line">আঙুল দিয়ে ছবি সরান বা বড় করুন</p>
+          <p class="save-help">ডাউনলোডে সমস্যা? <button type="button" id="viewBtn">ছবি খুলে সেভ করুন</button></p>
         </div>
         <div class="status" id="status" role="status" aria-live="polite"></div>
       </div>
     </section>
+    <div class="overlay" id="saveOverlay" hidden role="dialog" aria-modal="true" aria-label="ছবি সেভ করুন">
+      <div class="save-panel">
+        <h2>আপনার ছবি তৈরি!</h2>
+        <img id="savePreview" alt="আপনার তৈরি জগদ্ধাত্রী পূজার ছবি" />
+        <p>ছবির ওপর চেপে ধরে <b>Save Image</b> করুন। অথবা নিচের বোতামে ছবিটি খুলুন।</p>
+        <div class="row">
+          <button class="button primary" id="openImageBtn" type="button">ছবি খুলুন</button>
+          <button class="button secondary" id="closePreviewBtn" type="button">বন্ধ করুন</button>
+        </div>
+      </div>
+    </div>
     <footer class="foot">৪০ বছরের ঐতিহ্য · জয় মা জগদ্ধাত্রী<br>আপনার ছবি কোথাও আপলোড বা সংরক্ষণ করা হয় না।</footer>
   </main>
 <script>
@@ -130,7 +150,8 @@
   'use strict';
   const SIZE = 2048;
   const CENTER = { x: 1024, y: 1010 };
-  const RADIUS = 855;
+  // Keep the entire picture square, with the official frame on top.
+  const PHOTO_SIZE = SIZE;
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   const frame = new Image();
@@ -150,13 +171,13 @@
 
   const message = (s) => { status.textContent = s; };
   const limit = (v, min, max) => Math.max(min, Math.min(max, v));
-  const baseScale = () => photo ? Math.max(2 * RADIUS / photo.naturalWidth, 2 * RADIUS / photo.naturalHeight) : 1;
+  const baseScale = () => photo ? Math.max(PHOTO_SIZE / photo.naturalWidth, PHOTO_SIZE / photo.naturalHeight) : 1;
 
   function constrain() {
     if (!photo) return;
     const s = baseScale() * zoom;
-    const excessX = Math.max(0, (photo.naturalWidth * s - RADIUS * 2) / 2);
-    const excessY = Math.max(0, (photo.naturalHeight * s - RADIUS * 2) / 2);
+    const excessX = Math.max(0, (photo.naturalWidth * s - PHOTO_SIZE) / 2);
+    const excessY = Math.max(0, (photo.naturalHeight * s - PHOTO_SIZE) / 2);
     offsetX = limit(offsetX, -excessX, excessX);
     offsetY = limit(offsetY, -excessY, excessY);
   }
@@ -172,26 +193,28 @@
     if (photo) {
       const s = baseScale() * zoom;
       const w = photo.naturalWidth * s, h = photo.naturalHeight * s;
-      c.save();
-      c.beginPath();
-      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
-      c.clip();
       c.drawImage(photo, CENTER.x + offsetX - w / 2, CENTER.y + offsetY - h / 2, w, h);
-      c.restore();
     } else {
-      c.save();
-      c.beginPath();
-      c.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
-      c.clip();
       const g = c.createLinearGradient(300, 180, 1700, 1750);
       g.addColorStop(0, '#fff7f2'); g.addColorStop(1, '#fce0eb');
       c.fillStyle = g; c.fillRect(0, 0, SIZE, SIZE);
-      c.restore();
     }
     if (frameLoaded) c.drawImage(frame, 0, 0, SIZE, SIZE);
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
-  const redraw = () => render(canvas);
+  let exportTimer = null;
+  let editVersion = 0;
+  let cachedFile = null;
+  let imageURL = null;
+  let exportPromise = null;
+  const imageName = 'Jagaddhatri-Puja-2026.png';
+  function invalidate() {
+    editVersion++;
+    cachedFile = null;
+    clearTimeout(exportTimer);
+    if (photo && frameLoaded) exportTimer = setTimeout(() => { getFile(); }, 220);
+  }
+  const redraw = () => { render(canvas); invalidate(); };
 
   frame.onload = () => { frameLoaded = true; redraw(); };
   frame.onerror = () => message('ফ্রেম লোড হয়নি। frame.png ফাইলটি আছে কি না দেখুন।');
@@ -280,43 +303,93 @@
   canvas.addEventListener('pointercancel', pointerEnd);
   canvas.addEventListener('lostpointercapture', pointerEnd);
 
-  async function makeFile() {
-    if (!photo || !frameLoaded) { message('আগে ছবি যুক্ত করুন।'); return null; }
+  // Pre-generate the 2048px image after each edit. This allows Android's
+  // Web Share API to be invoked synchronously from the actual button tap.
+  function getFile() {
+    if (!photo || !frameLoaded) { message('আগে ছবি যুক্ত করুন।'); return Promise.resolve(null); }
+    if (cachedFile) return Promise.resolve(cachedFile);
+    const version = editVersion;
+    if (exportPromise && exportPromise.version === version) return exportPromise.promise;
     const output = document.createElement('canvas');
     output.width = SIZE; output.height = SIZE;
     render(output);
-    const blob = await new Promise(resolve => output.toBlob(resolve, 'image/png'));
-    if (!blob) { message('ছবি তৈরি করা যায়নি। আবার চেষ্টা করুন।'); return null; }
-    return new File([blob], 'Jagaddhatri-Puja-2026.png', { type: 'image/png' });
+    const promise = new Promise(resolve => {
+      output.toBlob(blob => {
+        if (!blob) { resolve(null); return; }
+        const file = new File([blob], imageName, { type: 'image/png' });
+        if (version === editVersion) cachedFile = file;
+        resolve(file);
+      }, 'image/png');
+    });
+    exportPromise = { version, promise };
+    return promise;
   }
-  function save(file) {
+  function downloadFile(file) {
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
-    a.href = url; a.download = file.name;
-    document.body.appendChild(a); a.click(); a.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+    a.href = url;
+    a.download = imageName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Do not revoke too quickly: Android and mobile in-app browsers may
+    // access the blob only after the download prompt has appeared.
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
   }
+  function showPreview(file) {
+    if (imageURL) URL.revokeObjectURL(imageURL);
+    imageURL = URL.createObjectURL(file);
+    document.getElementById('savePreview').src = imageURL;
+    document.getElementById('saveOverlay').hidden = false;
+  }
+  document.getElementById('closePreviewBtn').addEventListener('click', () => {
+    document.getElementById('saveOverlay').hidden = true;
+  });
+  document.getElementById('openImageBtn').addEventListener('click', () => {
+    if (!imageURL) return;
+    // Direct user tap, compatible with popup blockers; same-tab fallback.
+    const tab = window.open(imageURL, '_blank');
+    if (!tab) window.location.href = imageURL;
+  });
+  document.getElementById('viewBtn').addEventListener('click', async () => {
+    message('ছবি তৈরি হচ্ছে…');
+    const file = await getFile();
+    if (file) { showPreview(file); message(''); }
+  });
   document.getElementById('downloadBtn').addEventListener('click', async () => {
     message('ছবি তৈরি হচ্ছে…');
-    const file = await makeFile();
-    if (file) { save(file); message('ছবি ডাউনলোড হয়েছে। এবার ফেসবুকে ব্যবহার করুন।'); }
+    const file = await getFile();
+    if (file) {
+      downloadFile(file);
+      message('ডাউনলোড না হলে “ছবি খুলে সেভ করুন” চাপুন।');
+    } else message('ছবি তৈরি করা যায়নি। আবার চেষ্টা করুন।');
   });
-  document.getElementById('shareBtn').addEventListener('click', async () => {
-    const file = await makeFile();
-    if (!file) return;
-    try {
-      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({ files: [file], title: 'জগদ্ধাত্রী পূজা ২০২৬' });
-        message('');
-      } else {
-        save(file);
-        message('ছবি ডাউনলোড হয়েছে। ফেসবুকে আপলোড করুন।');
-      }
-    } catch (err) {
-      if (err?.name !== 'AbortError') message('শেয়ার করা যায়নি। ডাউনলোড করে ফেসবুকে দিন।');
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    // If the edited image is already cached, call share in the same tap.
+    // This is critical for browsers requiring transient user activation.
+    if (cachedFile && navigator.share && navigator.canShare?.({ files: [cachedFile] })) {
+      navigator.share({ files: [cachedFile], title: 'জগদ্ধাত্রী পূজা ২০২৬' })
+        .then(() => message(''))
+        .catch(err => { if (err?.name !== 'AbortError') { showPreview(cachedFile); message('শেয়ার না হলে ছবিটি সেভ করুন।'); } });
+      return;
+    }
+    if (!cachedFile) {
+      message('ছবি প্রস্তুত হচ্ছে…');
+      getFile().then(file => {
+        if (file) {
+          // Don't call navigator.share after awaiting export: some browsers
+          // treat the original tap as expired. Show a visible manual fallback.
+          showPreview(file);
+          message('ছবি প্রস্তুত। এখান থেকে সেভ করে শেয়ার করুন।');
+        }
+      });
+    } else {
+      showPreview(cachedFile);
+      message('ছবি সেভ করে Facebook বা WhatsApp-এ শেয়ার করুন।');
     }
   });
-  window.addEventListener('pagehide', () => { if (photoURL) URL.revokeObjectURL(photoURL); });
+  window.addEventListener('pagehide', () => { if (photoURL) URL.revokeObjectURL(photoURL); if (imageURL) URL.revokeObjectURL(imageURL); });
 })();
 </script>
 </body>
